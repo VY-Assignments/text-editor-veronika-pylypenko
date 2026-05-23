@@ -1,17 +1,19 @@
 #include<stdio.h>
 #include<inttypes.h>
 
-void text_printing(char text[100][256], uint8_t line) //просто виводжу текст користувача
+void text_printing(char** text, uint8_t row) //просто виводжу текст користувача
 {
-    for (uint8_t i = 0; i <= line; i++) {
+    for (uint8_t i = 0; i < row; i++) {
         printf("Your current text:  ");
         printf("%s\n", text[i]);
     }
 }
 int main() {
-    char text[100][256];
-    uint8_t line = 0;
+    uint8_t row = 0;
     uint8_t column = 0;
+    uint8_t capacity = 0;
+    char** text = NULL;
+   // malloc(row * sizeof(int*));
     while (1) // створила нескінчений цикл, щоб програма не завершувалась після першого введення
     {
         uint8_t choice;
@@ -27,6 +29,17 @@ int main() {
         switch (choice)
         {
         case 1: printf("Enter text to append: ");
+            char buffer[256];
+            if (row==capacity) {
+                if (capacity == 0) { capacity = 2; }
+                else { capacity *= 2; }
+                text = realloc(text, capacity * sizeof(char*));// помножила на 2, щоб менше викикати realloc 
+                if (text == NULL) {
+                    printf("Memory extension failed!\n");
+                    break;
+                }
+
+            }            
             printf("The command is not implemented\n ");break;
             //Append text symbols to the end 
         case 2:
@@ -42,7 +55,7 @@ int main() {
             break;
         case 5:// printf("Hello, text editor!");
             //printf("The command is not implemented\n");
-            text_printing(text, line);break;
+            text_printing(text, row);break;
         case 6:printf("Choose line and index: ");
             printf("The command is not implemented!!\n");break;
         case 7: printf("Choose line and index: ");
