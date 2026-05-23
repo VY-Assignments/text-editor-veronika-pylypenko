@@ -27,7 +27,7 @@ int main() {
         switch (choice)
         {
         case 1: printf("Enter text to append: ");
-            printf("The command is not implemented\n");break;
+            printf("The command is not implemented\n ");break;
             //Append text symbols to the end 
         case 2:
             printf("New line is started ");
