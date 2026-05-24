@@ -4,12 +4,14 @@
 void text_printing(char** text, uint8_t row) //просто виводжу текст користувача
 {
     for (uint8_t i = 0; i < row; i++) {
-        printf("Your current text:  ");
-        printf("%s\n", text[i]);
+        if (text[i] != NULL) {
+            printf("Your current text: %s", text[i]);
+        }
     }
 }
-int main() {
-    uint8_t row = 0;
+int main() 
+{
+    uint8_t row = 1;//бо вже маю активни й рядок з індексом 0.
     uint8_t column = 0;
     uint8_t capacity = 0;
     char** text = NULL;
@@ -28,23 +30,63 @@ int main() {
         scanf_s(" %hhu", &choice);// однобайтове ціле число
         switch (choice)
         {
+            //fgets - зчитування цілих рядків із пробілами(до того як ентер натиснули)
+            //scanf - зчитування окремих слів( до першого пробілу) або чисел(char,int, float)
         case 1: printf("Enter text to append: ");
             char buffer[256];
-            if (row==capacity) {
+            //strcpy - ф-ція для копіювання рядків (посимвольно переносить у цільовий буфер)
+            getchar(); //для того, щоб прибрати залишковий символ \n, щоб він не впливав на результат fgets (не пропустить введення)
+            // ця ф-ція бере 1 символ із потоку stdin
+            if (row > capacity) {
+                uint8_t old_capacity = capacity;
                 if (capacity == 0) { capacity = 2; }
                 else { capacity *= 2; }
-                text = realloc(text, capacity * sizeof(char*));// помножила на 2, щоб менше викикати realloc 
+                text = realloc(text, capacity * sizeof(char*));// помножила на 2, щоб менше викликати realloc 
+                for (uint8_t i = old_capacity; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
+                {
+                    text[i] = NULL;
+                }
                 if (text == NULL) {
                     printf("Memory extension failed!\n");
                     break;
                 }
+            }
+            if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+                printf("Your text is: %s", buffer);
+                size_t len = strlen(buffer);
+                if (text[row - 1] == NULL) {
+                    text[row - 1] = malloc((len + 1) * sizeof(char));
+                    strcpy_s(text[row - 1],len+1, buffer);//більш захищена, ніж strcpy
+                }
+                else
+                {
 
-            }            
-            printf("The command is not implemented\n ");break;
-            //Append text symbols to the end 
+                    size_t old_len = strlen(text[row - 1]); // розширюю текст, який вже є
+                    text[row - 1] = realloc(text[row - 1], (old_len + len + 1) * sizeof(char));
+                    strcat_s(text[row - 1], old_len+len+1, buffer);//strcat - для об'єднання двох рядків
+                }
+               
+                //Append text symbols to the end 
+            }
+            break;
         case 2:
             printf("New line is started ");
-            printf("The command is not implemented\n");break;
+            row++;
+            if (row > capacity) {
+                uint8_t old_capacity = capacity;
+                if (capacity == 0) { capacity = 2; }
+                else { capacity *= 2; }
+                text = realloc(text, capacity * sizeof(char*));// помножила на 2, щоб менше викликати realloc 
+                if (text == NULL) {
+                    printf("Memory extension failed!\n");
+                    break;
+                }
+                for (uint8_t i = old_capacity; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
+                {
+                    text[i] = NULL;
+                }
+            }
+           break;
             //Start the new line 
         case 3:
             printf("Enter the file name for saving:");
@@ -63,5 +105,5 @@ int main() {
 
         }
     }
-    return 0;
+        return 0;
 }
