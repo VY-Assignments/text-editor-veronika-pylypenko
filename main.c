@@ -54,6 +54,31 @@ void append_text(char*** text, size_t* capacity,size_t current_row, const char* 
         strcat_s((*text)[current_row], old_len + len + 1, buffer);
         }
 }
+//   case2
+void add_line(char*** text, size_t* capacity, size_t* current_row) {
+    printf("New line is started ");
+    (*current_row)++;
+    if (*current_row>= *capacity)
+    {
+        size_t old_capacity = *capacity;
+        if (*capacity == 0) {*capacity = 2; }
+        else { *capacity *= 2; }
+        char** temp = realloc(*text,(*capacity) * sizeof(char*));
+        if (!temp) {
+            printf("Memory extension failed!\n");
+            return;
+        }
+        *text = temp;
+        // printf("%p\n", (void*)text); - для перевірки чи створилась комірка
+
+        for (size_t i = old_capacity; i < *capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
+        {
+            (*text)[i] = NULL;
+        }
+    }
+   
+    (*text)[*current_row] = NULL;
+}
 int main()
 {
     size_t row = 1;//бо вже маю активни й рядок з індексом 0.
@@ -90,29 +115,7 @@ int main()
             }
             break;
         case 2:
-            printf("New line is started ");
-            if (current_row + 1 >= capacity)
-            {
-                size_t old_capacity = capacity;
-                if (capacity == 0) { capacity = 2; }
-                else { capacity *= 2; }
-                char** temp = realloc(text, capacity * sizeof(char*));
-                if (!temp) {
-                    printf("Memory extension failed!\n");
-                    return;
-                }
-                text = temp;
-                // printf("%p\n", (void*)text); - для перевірки чи створилась комірка
-
-                for (size_t i = old_capacity; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
-                {
-                    text[i] = NULL;
-                }
-            }
-            current_row++;
-            text[current_row] = NULL;
-            break;
-            //Start the new line 
+            add_line(&text, &capacity, &current_row);break;
         case 3:
             printf("Enter the file name for saving:");
             printf("The command is not implemented\n");break;
