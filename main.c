@@ -3,9 +3,11 @@
 #include<stdlib.h>
 #include<string.h>
 
-void text_printing(char** text, uint8_t row) //просто виводжу текст користувача
+void text_printing(char** text, size_t row) //просто виводжу текст користувача
 {
-    if (text == NULL) return;
+    if (text == NULL || row == 0) {
+        printf("Your text is empty.\n");
+        return; }
 
     for (size_t i = 0; i < row; i++) {
         if (text[i] != NULL) {
@@ -56,7 +58,7 @@ void append_text(char*** text, size_t* capacity,size_t current_row, const char* 
 }
 //for case2
 void add_line(char*** text, size_t* capacity, size_t* current_row) {
-    printf("New line is started ");
+    printf("New line is started.\n ");
     (*current_row)++;
     if (*current_row >= *capacity)
     {
@@ -277,11 +279,12 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                 }
                 break;
             case 7: printf("Choose line and index: ");
-                printf("The command is not implemented\n");break;
+
+               break;
             case 0: printf("Exit");break;
             default: printf("Unknown command.\n");
             }
-            if (choice == 0)break;
+            if (choice == 0) { break; }
         }
         //тут звільняю пам'ять
         for (size_t i = 0; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
