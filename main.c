@@ -9,7 +9,7 @@ void text_printing(char** text, uint8_t row) //просто виводжу те�
 
     for (size_t i = 0; i < row; i++) {
         if (text[i] != NULL) {
-            printf("Your current text: %s", text[i]);
+            printf("Your current text: %s\n", text[i]);
         }
     }
 }
@@ -66,6 +66,7 @@ void add_line(char*** text, size_t* capacity, size_t* current_row) {
         char** temp = realloc(*text, (*capacity) * sizeof(char*));
         if (!temp) {
             printf("Memory extension failed!\n");
+            (*current_row)--;
             return;
         }
         *text = temp;
@@ -104,45 +105,114 @@ void save_file(char** text, size_t row_count)
         printf("Text has been saved successfully");
 }
 //for case 4
-    void load_file(char*** text, size_t* capacity, size_t* current_row) {
-        char filename[256];
-        printf("Enter the file name for loading: ");
-        getchar();
-        if (fgets(filename, sizeof(filename), stdin) == NULL) {
-            printf("Error filename reading!"); return;
-        }
-        size_t len = strlen(filename);
-        if (len > 0 && filename[len - 1] == '\n') {
-            filename[len - 1] = '\0';
-        }
-        FILE* file = NULL; 
-        if (fopen_s(&file, filename, "r") != 0 || file == NULL) {
-            printf("Probably your file doesn`t exist!\n"); return;
-        }
-        for (size_t i = 0; i < *capacity; i++) {
-            if ((*text)[i] != NULL) { free((*text)[i]); }
-        }
-        free(*text);
-        //Скидаю менеджер пам'яті
-        *text = NULL;
-        *capacity = 0;
-        *current_row = 0;
-        char buffer[256];
-        size_t line_index = 0;
-        while(fgets(buffer, sizeof(buffer), file) != NULL){
-            if (line_index == 0) {
-                append_text(text, capacity, *current_row, buffer);
-                line_index++;
-            }
-            else {
-                (*current_row)++;
-                append_text(text, capacity, *current_row, buffer);
-            }
-        }
-        fclose(file);
-        printf("Text has been loaded successfully");
+void load_file(char*** text, size_t* capacity, size_t* current_row) {
+    char filename[256];
+    printf("Enter the file name for loading: ");
+    getchar();
+    if (fgets(filename, sizeof(filename), stdin) == NULL) {
+        printf("Error filename reading!"); return;
     }
+    size_t len = strlen(filename);
+    if (len > 0 && filename[len - 1] == '\n') {
+        filename[len - 1] = '\0';
+    }
+    FILE* file = NULL;
+    if (fopen_s(&file, filename, "r") != 0 || file == NULL) {
+        printf("Probably your file doesn`t exist!\n"); return;
+    }
+    for (size_t i = 0; i < *capacity; i++) {
+        if ((*text)[i] != NULL) { free((*text)[i]); }
+    }
+    free(*text);
+    //Скидаю менеджер пам'яті
+    *text = NULL;
+    *capacity = 0;
+    *current_row = 0;
+    char buffer[256];
+    size_t line_index = 0;
+    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        if (line_index == 0) {
+            append_text(text, capacity, *current_row, buffer);
+            line_index++;
+        }
+        else {
+            (*current_row)++;
+            append_text(text, capacity, *current_row, buffer);
+        }
+    }
+    fclose(file);
+    if (*text == NULL) {
+        *capacity = 2;
+        *text = calloc(*capacity, sizeof(char*));
+        if (*text != NULL) {
+            (*text)[0] = malloc(1);
+            if ((*text)[0] != NULL) {
+                (*text)[0][0] = '\0';
+            }
+
+        }
+    }
+    printf("Text has been loaded successfully");
+}
+
+    
    // (*text)[*current_row] = NULL;
+
+    //for case 5
+    void find_str(char** text, size_t row_count, const char* target_str) {
+        if (text == NULL || row_count == 0 || target_str == NULL || strlen(target_str)==0) {
+            printf("You enter nothing or there is no text!"); return;
+        }
+        size_t target_len = strlen(target_str);
+        uint8_t found_signal = 0;
+        for (size_t i = 0; i < row_count; i++) {
+            if (text[i] == NULL) {
+                continue;
+
+                size_t line_len = strlen(text[i]);
+                if (line_len < target_len) continue;
+                for (size_t text_ind = 0; text_ind <= line_len - target_len; text_ind++) {
+                    int match = 1;
+                    for (size_t sub_ind = 0; sub_ind < target_len; sub_ind++) {
+                        if (text[i][text_ind + sub_ind] != target_str[sub_ind]) {
+                            match = 0;
+                            break;
+                        }
+                    }
+                    if (match == 1) {
+                        printf("The text is in this position: %zu %zu\n", i, text);
+                        found_signal++;
+                    }
+                }
+            }
+        }
+        if (!found_signal) {
+            printf("Search string was not found!");
+        }
+
+    }
+    //for case 6 
+    void insert_text(char** text, size_t row_count, size_t target_row, size_t target_col, const char* buffer) {
+        if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
+            printf("Your target line doesn`t exist");
+            return;
+        }
+        size_t old_len = strlen(text[target_row]);
+        size_t insert_len = strlen(buffer);
+        if (target_col > old_len) {
+            target_col = old_len; 
+        }
+        char* temp = realloc(text[target_row], old_len + insert_len + 1);
+        if (temp == NULL) {
+            printf("Realloc failed");
+            return;
+        }
+        text[target_row] = temp; 
+        memmove(text[target_row]+target_col+insert_len, text[target_row]+target_col, old_len-target_col, insert_len);
+        memcpy(text[target_row] + target_col, buffer, insert_len);
+        printf("Text inserted succesfully!\n");
+        return;
+    }
     int main()
     {
         size_t row = 1;//бо вже маю активни й рядок з індексом 0.
@@ -150,7 +220,7 @@ void save_file(char** text, size_t row_count)
         size_t column = 0;
         size_t capacity = 0;
         char** text = NULL;
-        // malloc(row * sizeof(int*));
+       
         while (1) // створила нескінчений цикл, щоб програма не завершувалась після першого введення
         {
             uint8_t choice;
@@ -175,6 +245,10 @@ void save_file(char** text, size_t row_count)
 
                 if (fgets(buffer, sizeof(buffer), stdin) != NULL)
                 {
+                    size_t len = strlen(buffer);
+                    if (len > 0 && buffer[len - 1] == '\n') {
+                        buffer[len - 1] = '\0';
+                    }
                     append_text(&text, &capacity, current_row, buffer);
                 }
                 break;
@@ -191,7 +265,17 @@ void save_file(char** text, size_t row_count)
                 //printf("The command is not implemented\n");
                 text_printing(text, current_row + 1);break;
             case 6:printf("Choose line and index: ");
-                printf("The command is not implemented!!\n");break;
+                char search_buffer[256];
+                getchar();
+                if (fgets(search_buffer, sizeof(search_buffer), stdin) != NULL)
+                {
+                    size_t len = strlen(search_buffer);
+                    if (len > 0 && search_buffer[len - 1] == '\n') {
+                        search_buffer[len - 1] = '\0';
+                    }
+                   find_str(text,current_row+1, search_buffer);
+                }
+                break;
             case 7: printf("Choose line and index: ");
                 printf("The command is not implemented\n");break;
             case 0: printf("Exit");break;
