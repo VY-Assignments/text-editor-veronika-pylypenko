@@ -84,35 +84,35 @@ void add_line(char*** text, size_t* capacity, size_t* current_row) {
 void save_file(char** text, size_t row_count)
 {
     if (text == NULL || row_count == 0) {
-        printf("Your file is empty!"); return;
+        printf("Your file is empty!\n"); return;
     }
     char filename[256];
     printf("Enter the file name for saving: ");
     getchar();
     if (fgets(filename, sizeof(filename), stdin) == NULL) {
-        printf("Error filename reading!"); return; }
+        printf("Error filename reading!\n"); return; }
     size_t len = strlen(filename);
     if (len > 0 && filename[len - 1] == '\n') {
         filename[len - 1] = '\0';
     }
     FILE* file;
     if (fopen_s(&file, filename, "w") != 0 || file == NULL) {
-        printf("Some problems with file writinh appeared!"); return;
+        printf("Some problems with file writinh appeared!\n"); return;
     }
     for (size_t i = 0; i < row_count; i++) {
-        if (text[i] != NULL) { fprintf(file, "%s", text[i]); }//fprintf - ф-ція для запису у файл
+        if (text[i] != NULL) { fprintf(file, "%s\n", text[i]); }//fprintf - ф-ція для запису у файл
     }
 
         fclose(file);
-        printf("Text has been saved successfully");
+        printf("Text has been saved successfully\n");
 }
-//for case 4
+//for case 3
 void load_file(char*** text, size_t* capacity, size_t* current_row) {
     char filename[256];
     printf("Enter the file name for loading: ");
     getchar();
     if (fgets(filename, sizeof(filename), stdin) == NULL) {
-        printf("Error filename reading!"); return;
+        printf("Error filename reading!\n"); return;
     }
     size_t len = strlen(filename);
     if (len > 0 && filename[len - 1] == '\n') {
@@ -122,8 +122,10 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
     if (fopen_s(&file, filename, "r") != 0 || file == NULL) {
         printf("Probably your file doesn`t exist!\n"); return;
     }
-    for (size_t i = 0; i < *capacity; i++) {
-        if ((*text)[i] != NULL) { free((*text)[i]); }
+    if(*text!=NULL){
+        for (size_t i = 0; i < *capacity; i++) {
+            if ((*text)[i] != NULL) { free((*text)[i]); }
+        }
     }
     free(*text);
     //Скидаю менеджер пам'яті
@@ -132,7 +134,12 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
     *current_row = 0;
     char buffer[256];
     size_t line_index = 0;
-    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+    while (fgets(buffer, sizeof(buffer), file) != NULL)
+    {
+        size_t b_len = strlen(buffer);
+        if (b_len > 0 && buffer[b_len - 1] == '\n') {
+            buffer[b_len - 1] = '\0';
+        }
         if (line_index == 0) {
             append_text(text, capacity, *current_row, buffer);
             line_index++;
@@ -142,6 +149,9 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             append_text(text, capacity, *current_row, buffer);
         }
     }
+       
+    
+    
     fclose(file);
     if (*text == NULL) {
         *capacity = 2;
@@ -160,16 +170,17 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
     
    // (*text)[*current_row] = NULL;
 
-    //for case 5
+    //for case 6
     void find_str(char** text, size_t row_count, const char* target_str) {
         if (text == NULL || row_count == 0 || target_str == NULL || strlen(target_str)==0) {
             printf("You enter nothing or there is no text!"); return;
         }
         size_t target_len = strlen(target_str);
-        uint8_t found_signal = 0;
+       int found_signal = 0;
         for (size_t i = 0; i < row_count; i++) {
             if (text[i] == NULL) {
                 continue;
+            }
 
                 size_t line_len = strlen(text[i]);
                 if (line_len < target_len) continue;
@@ -182,18 +193,17 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                         }
                     }
                     if (match == 1) {
-                        printf("The text is in this position: %zu %zu\n", i, text);
+                        printf("The text is in this position: %zu %zu\n", i, text_ind);
                         found_signal++;
                     }
                 }
             }
-        }
         if (!found_signal) {
             printf("Search string was not found!");
         }
 
     }
-    //for case 6 
+    //for case 5
     void insert_text(char** text, size_t row_count, size_t target_row, size_t target_col, const char* buffer) {
         if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
             printf("Your target line doesn`t exist");
@@ -210,14 +220,13 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             return;
         }
         text[target_row] = temp; 
-        memmove(text[target_row]+target_col+insert_len, text[target_row]+target_col, old_len-target_col, insert_len);
+        memmove(text[target_row]+target_col+insert_len, text[target_row]+target_col, old_len-target_col+1);
         memcpy(text[target_row] + target_col, buffer, insert_len);
         printf("Text inserted succesfully!\n");
         return;
     }
     int main()
     {
-        size_t row = 1;//бо вже маю активни й рядок з індексом 0.
         size_t current_row = 0;
         size_t column = 0;
         size_t capacity = 0;
@@ -234,6 +243,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             printf("5. Insert the text by line and symbol index\n");
             printf("6. Search (please note that the text can be found more than once)\n");
             printf("7. (Optional) Clearing the console\n");
+            printf("0. Exit\n");
             scanf_s(" %hhu", &choice);// однобайтове ціле число
             switch (choice)
             {
@@ -257,16 +267,41 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             case 2:
                 add_line(&text, &capacity, &current_row);break;
             case 3:
-                save_file(text, current_row + 1);
+                printf("Choose action: 1-Save, 2-Load: ");
+                int file_op; 
+                scanf_s("%d", &file_op);
+                if (file_op == 1) {
+                    save_file(text, current_row + 1);
+                }
+                else if (file_op == 2) {
+                    load_file(&text, &capacity, &current_row);
+                }
+                else {
+                    printf("Unknown action\n");
+                }
                 break;
                 //Use files to load/save the information
             case 4:
-                load_file(&text, &capacity, &current_row);
-                break;
-            case 5:// printf("Hello, text editor!");
-                //printf("The command is not implemented\n");
                 text_printing(text, current_row + 1);break;
-            case 6:printf("Choose line and index: ");
+                break;
+            case 5: {
+                size_t t_row, t_col;
+                char insert_buffer[256];
+                printf("Choose line and index: ");
+                scanf_s("%zu %zu", &t_row, &t_col);
+                printf("enter to insert: ");
+                getchar();
+                if (fgets(insert_buffer, sizeof(insert_buffer), stdin) != NULL)
+                {
+                    size_t len = strlen(insert_buffer);
+                    if (len > 0 && insert_buffer[len - 1] == '\n') {
+                        insert_buffer[len - 1] = '\0';
+                    }
+                   insert_text(text, current_row + 1,t_row, t_col, insert_buffer);
+                }
+                break;
+            }
+            case 6:printf("Enter text to search: ");
                 char search_buffer[256];
                 getchar();
                 if (fgets(search_buffer, sizeof(search_buffer), stdin) != NULL)
@@ -278,20 +313,27 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                    find_str(text,current_row+1, search_buffer);
                 }
                 break;
-            case 7: printf("Choose line and index: ");
-
-               break;
+            case 7: 
+#ifdef _WIN32 
+                system("cls");
+#else 
+                system("clear");
+#endif
+                printf("Console cleared.\n");
+                break;
+              
             case 0: printf("Exit");break;
             default: printf("Unknown command.\n");
             }
             if (choice == 0) { break; }
         }
         //тут звільняю пам'ять
-        for (size_t i = 0; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
-        {
-            free(text[i]);
+        if (text != NULL) {
+            for (size_t i = 0; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
+            {
+                free(text[i]);
+            }
+            free(text);
         }
-        free(text);
-
         return 0;
     }
