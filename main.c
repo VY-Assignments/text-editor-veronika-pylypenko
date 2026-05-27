@@ -54,16 +54,16 @@ void append_text(char*** text, size_t* capacity,size_t current_row, const char* 
         strcat_s((*text)[current_row], old_len + len + 1, buffer);
         }
 }
-//   case2
+//for case2
 void add_line(char*** text, size_t* capacity, size_t* current_row) {
     printf("New line is started ");
     (*current_row)++;
-    if (*current_row>= *capacity)
+    if (*current_row >= *capacity)
     {
         size_t old_capacity = *capacity;
-        if (*capacity == 0) {*capacity = 2; }
+        if (*capacity == 0) { *capacity = 2; }
         else { *capacity *= 2; }
-        char** temp = realloc(*text,(*capacity) * sizeof(char*));
+        char** temp = realloc(*text, (*capacity) * sizeof(char*));
         if (!temp) {
             printf("Memory extension failed!\n");
             return;
@@ -76,63 +76,129 @@ void add_line(char*** text, size_t* capacity, size_t* current_row) {
             (*text)[i] = NULL;
         }
     }
-   
-    (*text)[*current_row] = NULL;
 }
-int main()
+//for case 3
+void save_file(char** text, size_t row_count)
 {
-    size_t row = 1;//бо вже маю активни й рядок з індексом 0.
-    size_t current_row = 0;
-    size_t column = 0;
-    size_t capacity = 0;
-    char** text = NULL;
-    // malloc(row * sizeof(int*));
-    while (1) // створила нескінчений цикл, щоб програма не завершувалась після першого введення
-    {
-        uint8_t choice;
-        printf("Choose the command:\n");
-        printf("1. Append text symbols to the end\n");
-        printf("2. Start the new line\n");
-        printf("3. Use files to load/save the information\n");
-        printf("4. Print the current text to console\n");
-        printf("5. Insert the text by line and symbol index\n");
-        printf("6. Search (please note that the text can be found more than once)\n");
-        printf("7. (Optional) Clearing the console\n");
-        scanf_s(" %hhu", &choice);// однобайтове ціле число
-        switch (choice)
-        {
-            //fgets - зчитування цілих рядків із пробілами(до того як ентер натиснули)
-            //scanf - зчитування окремих слів( до першого пробілу) або чисел(char,int, float)
-        case 1: printf("Enter text to append: ");
-            char buffer[256];
-            //strcpy - ф-ція для копіювання рядків (посимвольно переносить у цільовий буфер)
-            getchar(); //для того, щоб прибрати залишковий символ \n, щоб він не впливав на результат fgets (не пропустить введення)
-            // ця ф-ція бере 1 символ із потоку stdin
-
-            if (fgets(buffer, sizeof(buffer), stdin) != NULL)
-            {
-                append_text(&text, &capacity, current_row, buffer);
-            }
-            break;
-        case 2:
-            add_line(&text, &capacity, &current_row);break;
-        case 3:
-            printf("Enter the file name for saving:");
-            printf("The command is not implemented\n");break;
-            //Use files to load/save the information
-        case 4: printf("Enter the file name for loading:");
-            printf("The command is not implemented\n");
-            break;
-        case 5:// printf("Hello, text editor!");
-            //printf("The command is not implemented\n");
-            text_printing(text, current_row + 1);break;
-        case 6:printf("Choose line and index: ");
-            printf("The command is not implemented!!\n");break;
-        case 7: printf("Choose line and index: ");
-            printf("The command is not implemented\n");break;
-
-        }
+    if (text == NULL || row_count == 0) {
+        printf("Your file is empty!"); return;
     }
+    char filename[256];
+    printf("Enter the file name for saving: ");
+    getchar();
+    if (fgets(filename, sizeof(filename), stdin) == NULL) {
+        printf("Error filename reading!"); return; }
+    size_t len = strlen(filename);
+    if (len > 0 && filename[len - 1] == '\n') {
+        filename[len - 1] = '\0';
+    }
+    FILE* file;
+    if (fopen_s(&file, filename, "w") != 0 || file == NULL) {
+        printf("Some problems with file writinh appeared!"); return;
+    }
+    for (size_t i = 0; i < row_count; i++) {
+        if (text[i] != NULL) { fprintf(file, "%s", text[i]); }//fprintf - ф-ція для запису у файл
+    }
+
+        fclose(file);
+        printf("Text has been saved successfully");
+}
+//for case 4
+    void load_file(char*** text, size_t* capacity, size_t* current_row) {
+        char filename[256];
+        printf("Enter the file name for loading: ");
+        getchar();
+        if (fgets(filename, sizeof(filename), stdin) == NULL) {
+            printf("Error filename reading!"); return;
+        }
+        size_t len = strlen(filename);
+        if (len > 0 && filename[len - 1] == '\n') {
+            filename[len - 1] = '\0';
+        }
+        FILE* file = NULL; 
+        if (fopen_s(&file, filename, "r") != 0 || file == NULL) {
+            printf("Probably your file doesn`t exist!\n"); return;
+        }
+        for (size_t i = 0; i < *capacity; i++) {
+            if ((*text)[i] != NULL) { free((*text)[i]); }
+        }
+        free(*text);
+        //Скидаю менеджер пам'яті
+        *text = NULL;
+        *capacity = 0;
+        *current_row = 0;
+        char buffer[256];
+        size_t line_index = 0;
+        while(fgets(buffer, sizeof(buffer), file) != NULL){
+            if (line_index == 0) {
+                append_text(text, capacity, *current_row, buffer);
+                line_index++;
+            }
+            else {
+                (*current_row)++;
+                append_text(text, capacity, *current_row, buffer);
+            }
+        }
+        fclose(file);
+        printf("Text has been loaded successfully");
+    }
+   // (*text)[*current_row] = NULL;
+    int main()
+    {
+        size_t row = 1;//бо вже маю активни й рядок з індексом 0.
+        size_t current_row = 0;
+        size_t column = 0;
+        size_t capacity = 0;
+        char** text = NULL;
+        // malloc(row * sizeof(int*));
+        while (1) // створила нескінчений цикл, щоб програма не завершувалась після першого введення
+        {
+            uint8_t choice;
+            printf("Choose the command:\n");
+            printf("1. Append text symbols to the end\n");
+            printf("2. Start the new line\n");
+            printf("3. Use files to load/save the information\n");
+            printf("4. Print the current text to console\n");
+            printf("5. Insert the text by line and symbol index\n");
+            printf("6. Search (please note that the text can be found more than once)\n");
+            printf("7. (Optional) Clearing the console\n");
+            scanf_s(" %hhu", &choice);// однобайтове ціле число
+            switch (choice)
+            {
+                //fgets - зчитування цілих рядків із пробілами(до того як ентер натиснули)
+                //scanf - зчитування окремих слів( до першого пробілу) або чисел(char,int, float)
+            case 1: printf("Enter text to append: ");
+                char buffer[256];
+                //strcpy - ф-ція для копіювання рядків (посимвольно переносить у цільовий буфер)
+                getchar(); //для того, щоб прибрати залишковий символ \n, щоб він не впливав на результат fgets (не пропустить введення)
+                // ця ф-ція бере 1 символ із потоку stdin
+
+                if (fgets(buffer, sizeof(buffer), stdin) != NULL)
+                {
+                    append_text(&text, &capacity, current_row, buffer);
+                }
+                break;
+            case 2:
+                add_line(&text, &capacity, &current_row);break;
+            case 3:
+                save_file(text, current_row + 1);
+                break;
+                //Use files to load/save the information
+            case 4:
+                load_file(&text, &capacity, &current_row);
+                break;
+            case 5:// printf("Hello, text editor!");
+                //printf("The command is not implemented\n");
+                text_printing(text, current_row + 1);break;
+            case 6:printf("Choose line and index: ");
+                printf("The command is not implemented!!\n");break;
+            case 7: printf("Choose line and index: ");
+                printf("The command is not implemented\n");break;
+            case 0: printf("Exit");break;
+            default: printf("Unknown command.\n");
+            }
+            if (choice == 0)break;
+        }
         //тут звільняю пам'ять
         for (size_t i = 0; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
         {
@@ -141,4 +207,4 @@ int main()
         free(text);
 
         return 0;
-}
+    }
