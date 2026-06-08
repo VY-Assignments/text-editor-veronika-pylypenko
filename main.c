@@ -225,6 +225,25 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
         printf("Text inserted succesfully!\n");
         return;
     }
+    //Assignment 2
+    void delete(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
+        if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
+            printf("Your target line doesn`t exist\n");
+            return;
+        }
+        size_t len = strlen(text[target_row]);
+        if (target_column >= len) {
+            printf("Target index is out of range!\n");
+            return;
+        }
+        if (target_column+count >= len){
+            count = len - target_column;
+        }
+        memmove(text[target_row] + target_column, text[target_row] + target_column + count, len - target_column - count + 1);
+        printf("Symbols deleted succesfully!\n");
+        return;
+    }
+
     int main()
     {
         size_t current_row = 0;
@@ -259,7 +278,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                 {
                     size_t len = strlen(buffer);
                     if (len > 0 && buffer[len - 1] == '\n') {
-                        buffer[len - 1] = '\0';
+                        while (getchar() != '\n');
                     }
                     append_text(&text, &capacity, current_row, buffer);
                 }
@@ -313,14 +332,14 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                    find_str(text,current_row+1, search_buffer);
                 }
                 break;
-            case 7: 
+           /* case 7:
 #ifdef _WIN32 
                 system("cls");
 #else 
                 system("clear");
 #endif
                 printf("Console cleared.\n");
-                break;
+                break;*/
               
             case 0: printf("Exit");break;
             default: printf("Unknown command.\n");
