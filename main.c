@@ -2,7 +2,16 @@
 #include<inttypes.h>
 #include<stdlib.h>
 #include<string.h>
+#define MAX_HISTORY 3
 
+typedef struct {
+    char* text_lines[100];
+    size_t row_count;
+    size_t capcity;
+}HistoryState;
+HistoryState history[MAX_HISTORY];
+int history_ind = -1;
+int history_count = 0;
 
 void text_printing(char** text, size_t row) //просто виводжу текст користувача
 {
@@ -256,6 +265,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         printf("Symbols deleted succesfully!\n");
         return;
     }
+   
     void undo() {
 
     }
