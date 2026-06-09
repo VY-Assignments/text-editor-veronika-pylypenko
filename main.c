@@ -3,6 +3,7 @@
 #include<stdlib.h>
 #include<string.h>
 
+
 void text_printing(char** text, size_t row) //просто виводжу текст користувача
 {
     if (text == NULL || row == 0) {
@@ -250,7 +251,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
         size_t column = 0;
         size_t capacity = 0;
         char** text = NULL;
-       
+
         while (1) // створила нескінчений цикл, щоб програма не завершувалась після першого введення
         {
             uint8_t choice;
@@ -262,6 +263,13 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             printf("5. Insert the text by line and symbol index\n");
             printf("6. Search (please note that the text can be found more than once)\n");
             printf("7. (Optional) Clearing the console\n");
+            printf("8. Delete command\n");
+            printf("9. Undo command\n");
+            printf("10. Redo command\n");
+            printf("11. Cut command\n");
+            printf("12. Paste command\n");
+            printf("13. Copy command\n");
+            printf("14. Insert with replacement command\n");
             printf("0. Exit\n");
             scanf_s(" %hhu", &choice);// однобайтове ціле число
             switch (choice)
@@ -287,7 +295,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                 add_line(&text, &capacity, &current_row);break;
             case 3:
                 printf("Choose action: 1-Save, 2-Load: ");
-                int file_op; 
+                int file_op;
                 scanf_s("%d", &file_op);
                 if (file_op == 1) {
                     save_file(text, current_row + 1);
@@ -316,7 +324,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                     if (len > 0 && insert_buffer[len - 1] == '\n') {
                         insert_buffer[len - 1] = '\0';
                     }
-                   insert_text(text, current_row + 1,t_row, t_col, insert_buffer);
+                    insert_text(text, current_row + 1, t_row, t_col, insert_buffer);
                 }
                 break;
             }
@@ -329,23 +337,36 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                     if (len > 0 && search_buffer[len - 1] == '\n') {
                         search_buffer[len - 1] = '\0';
                     }
-                   find_str(text,current_row+1, search_buffer);
+                    find_str(text, current_row + 1, search_buffer);
                 }
                 break;
-           /* case 7:
-#ifdef _WIN32 
-                system("cls");
-#else 
-                system("clear");
-#endif
-                printf("Console cleared.\n");
-                break;*/
-              
+                /* case 7:
+     #ifdef _WIN32
+                     system("cls");
+     #else
+                     system("clear");
+     #endif
+                     printf("Console cleared.\n");
+                     break;*/
+            case 8:
+            {
+                size_t row_d, column_d, count_d;
+                printf("Choose line, index, number of symbols: ");
+
+                if (scanf_s("%zu %zu %zu", &row_d, &column_d, &count_d) == 3) {
+                    delete(text, current_row + 1, row_d, column_d, count_d);
+                }
+                else {
+                    printf("Invalid input\n");
+
+                }
+                break;
+            }
             case 0: printf("Exit");break;
             default: printf("Unknown command.\n");
             }
             if (choice == 0) { break; }
-        }
+        
         //тут звільняю пам'ять
         if (text != NULL) {
             for (size_t i = 0; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
@@ -354,5 +375,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             }
             free(text);
         }
-        return 0;
     }
+        return 0;
+ }
+    
