@@ -371,7 +371,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         }
         printf("Redo completed successfully.\n");
     }
-    void copy_text(char** text, size_t* row_count, size_t target_row, size_t target_column, size_t count) {
+    void copy_text(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
         if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
             printf("Your target line doesn`t exist\n");
             return;
@@ -397,7 +397,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         printf("Copied to clipboard: \"%s\"\n", global_buffer);
         return;
     }
-    void cut_text(char** text, size_t* row_count, size_t target_row, size_t target_column, size_t count) {
+    void cut_text(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
         if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
             printf("Your target line doesn`t exist\n");
             return;
@@ -408,7 +408,18 @@ void find_str(char** text, size_t row_count, const char* target_str) {
             printf("Text cut succesfully!\n");
         }
     }
-
+    void paste_text(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
+        if (global_buffer == NULL || target_row >= row_count || text[target_row] == NULL) {
+            printf("Your target line doesn`t exist\n");
+            return;
+        }
+        copy_text(text, row_count, target_row, target_column, count);
+        if (global_buffer != NULL && strlen(global_buffer) > 0) {
+            delete_symbols(text, row_count, target_column, target_column, count);
+            printf("Clipboard is empty!\n");
+        }
+        insert_text(text, row_count, target_row, target_column, global_buffer);
+    }
     int main()
     {
         size_t current_row = 0;
