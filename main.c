@@ -96,7 +96,7 @@ void add_line(char*** text, size_t* capacity, size_t* current_row) {
     }
     else {
         printf("emory extension failed!\n");
-        (*current_row--);
+        (*current_row)--;
     }
 }
 //for case 3
@@ -218,7 +218,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 found_signal++;
             }
 
-            if (!found_signal) {
+            if (found_signal==0) {
                 printf("Search string was not found!");
             }
         }
@@ -265,11 +265,26 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         printf("Symbols deleted succesfully!\n");
         return;
     }
+    void free_history_state(int ind) {
+        if (ind >= 0 && ind < MAX_HISTORY) {
+            for (size_t i = 0; i <history[ind].capacity; i++)
+            {
+                if (history[ind].text_lines[i] != NULL) {
+                   free(history[ind].text_lines[i]);
+                   history[ind].text_lines[i] = NULL;
+                }
+            }
+        }
+    }
    
-    void save_to_history(char** text, size_t* row_count, size_t capacity) {
-        for (int i = history_ind+1; i < history_count; i++)
+    void save_to_history(char** text, size_t row_count, size_t capacity) {
+        for (int i = history_ind + 1; i < history_count; i++)
         {
+            free_history_state(i);
+        }
+        history_count = history_ind + 1;
             if (history_count>=MAX_HISTORY) {
+                free_history_state(0);
                 for (int i = 1; i < MAX_HISTORY;i++) {
                     history[i - 1] = history[i];
                }
@@ -285,7 +300,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
             {
                 if (text != NULL && text[i]!=NULL) {
                     size_t len = strlen(text[i]);
-                    (*text)[i] = malloc(len + 1);
+                    history[history_ind].text_lines[i] = malloc(len + 1);
                     if (history[history_ind].text_lines[i] != NULL) {
                         strcpy_s(history[history_ind].text_lines[i], len + 1, text[i]);
                     }
@@ -294,9 +309,6 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                     }
                 }
             }
-        }
-
-        printf("Undo successful completed.\n");
     }
     void undo(char*** text, size_t* capacity, size_t* current_row) {
         if (history_ind <= 0) {
@@ -305,7 +317,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         if (*text != NULL) {
             for (size_t i = 0; i < *capacity; i++)
             {
-                if ((*text)[i] != NULL) { free(*text[i]); }
+                if ((*text)[i] != NULL) { free((*text)[i]); }
             }
             free(*text);
         }
@@ -335,7 +347,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         if (*text != NULL) {
             for (size_t i = 0; i < *capacity; i++)
             {
-                if ((*text)[i] != NULL) { free(*text[i]); }
+                if ((*text)[i] != NULL) { free((*text)[i]); }
             }
             free(*text);
         }
@@ -369,7 +381,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         size_t column = 0;
         size_t capacity = 0;
         char** text = NULL;
-
+        save_to_history(text, 0, capacity);
         while (1) // створила нескінчений цикл, щоб програма не завершувалась після першого введення
         {
             uint8_t choice;
@@ -410,10 +422,12 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                         int c;
                         while ((c = getchar()) != '\n' && c != EOF);
                     }
+                    save_to_history(text, current_row + 1, capacity);
                     append_text(&text, &capacity, current_row, buffer);
                 }
                 break;
             case 2:
+                save_to_history(text, current_row + 1, capacity);
                 add_line(&text, &capacity, &current_row);break;
             case 3:
                 printf("Choose action: 1-Save, 2-Load: ");
@@ -423,6 +437,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                     save_file(text, current_row + 1);
                 }
                 else if (file_op == 2) {
+                    save_to_history(text, current_row + 1, capacity);
                     load_file(&text, &capacity, &current_row);
                 }
                 else {
@@ -446,6 +461,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                     if (len > 0 && insert_buffer[len - 1] == '\n') {
                         insert_buffer[len - 1] = '\0';
                     }
+                    save_to_history(text, current_row + 1, capacity);
                     insert_text(text, current_row + 1, t_row, t_col, insert_buffer);
                 }
                 break;
@@ -476,6 +492,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 printf("Choose line, index, number of symbols: ");
 
                 if (scanf_s("%zu %zu %zu", &row_d, &column_d, &count_d) == 3) {
+                    save_to_history(text, current_row + 1, capacity);
                     delete_symbols(text, current_row + 1, row_d, column_d, count_d);
                 }
                 else {
@@ -495,6 +512,10 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 free(text[i]);
             }
             free(text);
+        }
+        for (int i = 0; i < history_count; i++)
+        {
+            free_history_state(i);
         }
         return 0;
     }
