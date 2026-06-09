@@ -296,8 +296,36 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         }
         printf("Undo successful completed.\n");
     }
-    void redo() {
-
+    void redo(char*** text, size_t* capacity, size_t* current_row) {
+        if (history_ind >= history_count-1) {
+            printf("Nothing to redo!\n"); return; 
+        }
+        if (*text != NULL) {
+            for (size_t i = 0; i < *capacity; i++)
+            {
+                if ((*text)[i] != NULL) { free(*text[i]); }
+            }
+            free(*text);
+        }
+        history_ind++;
+        HistoryState state = history[history_ind];
+        *capacity = state.capcity;
+        *current_row = (state.row_count > 0) ? state.row_count - 1 : 0;
+        *text = malloc((*capacity) * sizeof(char*));
+        for (size_t i = 0; i < *capacity; i++)
+        {
+            if (state.text_lines[i] != NULL) {
+                size_t len = strlen(state.text_lines[i]);
+                (*text)[i] = malloc(len + 1);
+                if ((*text)[i] != NULL) {
+                    strcpy_s((*text)[i], len + 1, state.text_lines[i]);
+                }
+                else {
+                    (*text)[i] = NULL;
+                }
+            }
+        }
+        printf("Redo completed successfully.\n");
     }
     void cut_copy_paste() {
 
