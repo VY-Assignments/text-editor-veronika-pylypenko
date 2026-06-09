@@ -7,7 +7,7 @@
 typedef struct {
     char* text_lines[100];
     size_t row_count;
-    size_t capcity;
+    size_t capacity;
 }HistoryState;
 HistoryState history[MAX_HISTORY];
 int history_ind = -1;
@@ -266,6 +266,38 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         return;
     }
    
+    void save_to_history(char** text, size_t* row_count, size_t capacity) {
+        for (int i = history_ind+1; i < history_count; i++)
+        {
+            if (history_count>=MAX_HISTORY) {
+                for (int i = 1; i < MAX_HISTORY;i++) {
+                    history[i - 1] = history[i];
+               }
+                history_ind--;
+                history_count--;
+            }
+            history_ind++;
+            history_count++;
+            history[history_ind].row_count = row_count;
+            history[history_ind].capacity = capacity;
+
+            for (size_t i = 0; i < capacity; i++)
+            {
+                if (text != NULL && text[i]!=NULL) {
+                    size_t len = strlen(text[i]);
+                    (*text)[i] = malloc(len + 1);
+                    if (history[history_ind].text_lines[i] != NULL) {
+                        strcpy_s(history[history_ind].text_lines[i], len + 1, text[i]);
+                    }
+                    else {
+                        history[history_ind].text_lines[i] = NULL;
+                    }
+                }
+            }
+        }
+
+        printf("Undo successful completed.\n");
+    }
     void undo(char*** text, size_t* capacity, size_t* current_row) {
         if (history_ind <= 0) {
             printf("Nothing to undo!\n"); return;
@@ -279,7 +311,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         }
         history_ind--;
         HistoryState state = history[history_ind];
-        *capacity = state.capcity;
+        *capacity = state.capacity;
         *current_row = (state.row_count > 0) ? state.row_count - 1 : 0;
         *text = malloc((*capacity) * sizeof(char*));
         for (size_t i = 0; i < *capacity; i++)
@@ -309,7 +341,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         }
         history_ind++;
         HistoryState state = history[history_ind];
-        *capacity = state.capcity;
+        *capacity = state.capacity;
         *current_row = (state.row_count > 0) ? state.row_count - 1 : 0;
         *text = malloc((*capacity) * sizeof(char*));
         for (size_t i = 0; i < *capacity; i++)
