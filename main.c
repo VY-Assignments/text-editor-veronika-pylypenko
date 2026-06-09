@@ -37,7 +37,7 @@ void append_text(char*** text, size_t* capacity,size_t current_row, const char* 
         }
     }
 
-    if ((*text)[current_row] == NULL)
+    if ((*text)[current_row] == NULL || strlen((*text)[current_row])==0)
     {
         (*text)[current_row] = malloc(len + 1);
         if ((*text)[current_row] == NULL) {
@@ -79,6 +79,15 @@ void add_line(char*** text, size_t* capacity, size_t* current_row) {
         {
             (*text)[i] = NULL;
         }
+    }
+    (*text)[*current_row] = (char*)malloc(1);
+    if ((*text)[*current_row] != NULL) {
+        (*text)[*current_row][0] = '\0';
+        printf("New line is started succesfully.\n ");
+    }
+    else {
+        printf("emory extension failed!\n");
+        (*current_row--);
     }
 }
 //for case 3
@@ -123,7 +132,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
     if (fopen_s(&file, filename, "r") != 0 || file == NULL) {
         printf("Probably your file doesn`t exist!\n"); return;
     }
-    if(*text!=NULL){
+    if (*text != NULL) {
         for (size_t i = 0; i < *capacity; i++) {
             if ((*text)[i] != NULL) { free((*text)[i]); }
         }
@@ -134,74 +143,77 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
     *capacity = 0;
     *current_row = 0;
     char buffer[256];
-    size_t line_index = 0;
+    size_t is_new_line = 1;
     while (fgets(buffer, sizeof(buffer), file) != NULL)
     {
         size_t b_len = strlen(buffer);
+        int end_with_newline = 0;
         if (b_len > 0 && buffer[b_len - 1] == '\n') {
+
             buffer[b_len - 1] = '\0';
+            end_with_newline = 1;
         }
-        if (line_index == 0) {
+        if (!is_new_line == 0) {
             append_text(text, capacity, *current_row, buffer);
-            line_index++;
         }
         else {
-            (*current_row)++;
-            append_text(text, capacity, *current_row, buffer);
-        }
-    }
-       
-    
-    
-    fclose(file);
-    if (*text == NULL) {
-        *capacity = 2;
-        *text = calloc(*capacity, sizeof(char*));
-        if (*text != NULL) {
-            (*text)[0] = malloc(1);
-            if ((*text)[0] != NULL) {
-                (*text)[0][0] = '\0';
+            if (*capacity == 0 || (*text)[*current_row] != NULL) {
+                if (*capacity != 0) { (*current_row)++; }
+                append_text(text, capacity, *current_row, buffer);
             }
-
+            is_new_line = end_with_newline;
         }
     }
-    printf("Text has been loaded successfully");
+        fclose(file);
+        if (*text == NULL) {
+            *capacity = 2;
+            *text = calloc(*capacity, sizeof(char*));
+            if (*text != NULL) {
+                (*text)[0] = malloc(1);
+                if ((*text)[0] != NULL) {
+                    (*text)[0][0] = '\0';
+                }
+
+            }
+        }
+        printf("Text has been loaded successfully");
 }
 
     
    // (*text)[*current_row] = NULL;
 
     //for case 6
-    void find_str(char** text, size_t row_count, const char* target_str) {
-        if (text == NULL || row_count == 0 || target_str == NULL || strlen(target_str)==0) {
-            printf("You enter nothing or there is no text!"); return;
+void find_str(char** text, size_t row_count, const char* target_str) {
+    if (text == NULL || row_count == 0 || target_str == NULL || strlen(target_str) == 0) {
+        printf("You enter nothing or there is no text!"); return;
+    }
+    size_t target_len = strlen(target_str);
+    int found_signal = 0;
+    for (size_t i = 0; i < row_count; i++) {
+        if (text[i] == NULL) {
+            continue;
         }
-        size_t target_len = strlen(target_str);
-       int found_signal = 0;
-        for (size_t i = 0; i < row_count; i++) {
-            if (text[i] == NULL) {
-                continue;
-            }
 
-                size_t line_len = strlen(text[i]);
-                if (line_len < target_len) continue;
-                for (size_t text_ind = 0; text_ind <= line_len - target_len; text_ind++) {
-                    int match = 1;
-                    for (size_t sub_ind = 0; sub_ind < target_len; sub_ind++) {
-                        if (text[i][text_ind + sub_ind] != target_str[sub_ind]) {
-                            match = 0;
-                            break;
-                        }
-                    }
-                    if (match == 1) {
-                        printf("The text is in this position: %zu %zu\n", i, text_ind);
-                        found_signal++;
-                    }
+        size_t line_len = strlen(text[i]);
+        if (line_len < target_len) continue;
+        for (size_t text_ind = 0; text_ind <= line_len - target_len; text_ind++) {
+            int match = 1;
+            for (size_t sub_ind = 0; sub_ind < target_len; sub_ind++) {
+                if (text[i][text_ind + sub_ind] != target_str[sub_ind]) {
+                    match = 0;
+                    break;
                 }
             }
-        if (!found_signal) {
-            printf("Search string was not found!");
+            if (match == 1) {
+                printf("The text is in this position: %zu %zu\n", i, text_ind);
+                found_signal++;
+            }
+
+            if (!found_signal) {
+                printf("Search string was not found!");
+            }
         }
+    }
 
     }
     //for case 5
@@ -213,21 +225,21 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
         size_t old_len = strlen(text[target_row]);
         size_t insert_len = strlen(buffer);
         if (target_col > old_len) {
-            target_col = old_len; 
+            target_col = old_len;
         }
         char* temp = realloc(text[target_row], old_len + insert_len + 1);
         if (temp == NULL) {
             printf("Realloc failed");
             return;
         }
-        text[target_row] = temp; 
-        memmove(text[target_row]+target_col+insert_len, text[target_row]+target_col, old_len-target_col+1);
+        text[target_row] = temp;
+        memmove(text[target_row] + target_col + insert_len, text[target_row] + target_col, old_len - target_col + 1);
         memcpy(text[target_row] + target_col, buffer, insert_len);
         printf("Text inserted succesfully!\n");
         return;
     }
     //Assignment 2
-    void delete(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
+    void delete_symbols(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
         if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
             printf("Your target line doesn`t exist\n");
             return;
@@ -237,7 +249,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             printf("Target index is out of range!\n");
             return;
         }
-        if (target_column+count >= len){
+        if (target_column + count >= len) {
             count = len - target_column;
         }
         memmove(text[target_row] + target_column, text[target_row] + target_column + count, len - target_column - count + 1);
@@ -295,7 +307,11 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                 {
                     size_t len = strlen(buffer);
                     if (len > 0 && buffer[len - 1] == '\n') {
-                        while (getchar() != '\n');
+                        buffer[len - 1] = '\0';
+                    }
+                    else {
+                        int c;
+                        while ((c = getchar()) != '\n' && c != EOF);
                     }
                     append_text(&text, &capacity, current_row, buffer);
                 }
@@ -363,7 +379,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                 printf("Choose line, index, number of symbols: ");
 
                 if (scanf_s("%zu %zu %zu", &row_d, &column_d, &count_d) == 3) {
-                    delete(text, current_row + 1, row_d, column_d, count_d);
+                    delete_symbols(text, current_row + 1, row_d, column_d, count_d);
                 }
                 else {
                     printf("Invalid input\n");
