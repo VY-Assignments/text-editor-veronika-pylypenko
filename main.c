@@ -12,7 +12,7 @@ typedef struct {
 HistoryState history[MAX_HISTORY];
 int history_ind = -1;
 int history_count = 0;
-
+char* global_buffer = NULL;
 void text_printing(char** text, size_t row) //просто виводжу текст користувача
 {
     if (text == NULL || row == 0) {
@@ -371,8 +371,31 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         }
         printf("Redo completed successfully.\n");
     }
-    void cut_copy_paste() {
-
+    void copy_text(char** text, size_t* row_count, size_t target_row, size_t target_column, size_t count) {
+        if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
+            printf("Your target line doesn`t exist\n");
+            return;
+        }
+        size_t len = strlen(text[target_row]);
+        if (target_column >= len) {
+            printf("Target index is out of range!\n");
+            return;
+        }
+        if (target_column + count >len) {
+            count = len - target_column;
+        }
+        if (global_buffer!=NULL) {
+            free(global_buffer);
+        }
+        global_buffer = (char*)malloc(count + 1);
+        if (global_buffer == NULL) {
+            printf("Clipboard memory allocation failed.\n");
+            return;
+        }
+        memmove(global_buffer, text[target_row] + target_column + count, count);
+        global_buffer[count] = '\0';
+        printf("Copied to clipboard: \"%s\"\n", global_buffer);
+        return;
     }
 
     int main()
