@@ -420,6 +420,29 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         }
         insert_text(text, row_count, target_row, target_column, global_buffer);
     }
+    void insert_with_replacement(char** text, size_t row_count, size_t target_row, size_t target_column, const char* buffer) {
+        if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
+            printf("Your target line doesn`t exist\n");
+            return;
+        }
+        size_t old_len = strlen(text[target_row]);
+        size_t insert_len = strlen(buffer);
+        if (target_column > old_len) {
+            target_column = old_len;
+        }
+        if (target_column+insert_len > old_len) {
+            char* temp = realloc(text[target_row], old_len + insert_len + 1);
+            if (temp == NULL) {
+                printf("Realloc failed");
+                return;
+            }
+            text[target_row] = temp;
+            text[target_row][target_column + insert_len] = '\0';
+        }
+        memcpy(text[target_row] + target_column, buffer, insert_len);
+        printf("Text inserted with replacement succesfully!\n");
+        return;
+    }
     int main()
     {
         size_t current_row = 0;
