@@ -244,6 +244,15 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
         printf("Symbols deleted succesfully!\n");
         return;
     }
+    void undo() {
+
+    }
+    void redo() {
+
+    }
+    void cut_copy_paste() {
+
+    }
 
     int main()
     {
@@ -358,7 +367,6 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
                 }
                 else {
                     printf("Invalid input\n");
-
                 }
                 break;
             }
@@ -366,7 +374,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             default: printf("Unknown command.\n");
             }
             if (choice == 0) { break; }
-        
+        }
         //тут звільняю пам'ять
         if (text != NULL) {
             for (size_t i = 0; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
@@ -375,7 +383,8 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             }
             free(text);
         }
-    }
         return 0;
- }
+    }
+        
+ 
     
