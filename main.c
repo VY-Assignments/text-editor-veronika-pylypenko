@@ -217,14 +217,12 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 printf("The text is in this position: %zu %zu\n", i, text_ind);
                 found_signal++;
             }
-
-            if (found_signal==0) {
-                printf("Search string was not found!");
-            }
+        }
+        if (found_signal == 0) {
+            printf("Search string was not found!");
         }
     }
-
-    }
+}
     //for case 5
     void insert_text(char** text, size_t row_count, size_t target_row, size_t target_col, const char* buffer) {
         if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
@@ -392,7 +390,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
             printf("Clipboard memory allocation failed.\n");
             return;
         }
-        memmove(global_buffer, text[target_row] + target_column + count, count);
+        memmove(global_buffer, text[target_row] + target_column, count);
         global_buffer[count] = '\0';
         printf("Copied to clipboard: \"%s\"\n", global_buffer);
         return;
@@ -404,21 +402,21 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         }
         copy_text(text, row_count, target_row, target_column, count);
         if (global_buffer != NULL && strlen(global_buffer) > 0) {
-            delete_symbols(text, row_count, target_column, target_column, count);
+            delete_symbols(text, row_count, target_row, target_column, count);
             printf("Text cut succesfully!\n");
         }
     }
     void paste_text(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
-        if (global_buffer == NULL || target_row >= row_count || text[target_row] == NULL) {
+      
+        if (global_buffer == NULL || strlen(global_buffer) == 0) {
+            printf("Clipboard is empty!\n"); return;
+        }
+           if (target_row >= row_count || text[target_row] == NULL) {
             printf("Your target line doesn`t exist\n");
             return;
         }
-        copy_text(text, row_count, target_row, target_column, count);
-        if (global_buffer != NULL && strlen(global_buffer) > 0) {
-            delete_symbols(text, row_count, target_column, target_column, count);
-            printf("Clipboard is empty!\n");
-        }
         insert_text(text, row_count, target_row, target_column, global_buffer);
+        printf("Text pasted successfully!\n");
     }
     void insert_with_replacement(char** text, size_t row_count, size_t target_row, size_t target_column, const char* buffer) {
         if (text == NULL || target_row >= row_count || text[target_row] == NULL) {
@@ -568,13 +566,85 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 }
                 break;
             }
+            case 9:
+
+                undo(&text, &capacity, &current_row);
+                break;
+            case 10:
+                redo(&text, &capacity, &current_row);
+                break;
+
+            case 11:
+            {
+                size_t row_c, column_c, count_c;
+                printf("Choose line, index, number of symbols to cut: ");
+
+                if (scanf_s("%zu %zu %zu", &row_c, &column_c, &count_c) == 3) {
+                    save_to_history(text, current_row + 1, capacity);
+                    cut_text(text, current_row + 1, row_c, column_c, count_c);
+                }
+                else {
+                    printf("Invalid input\n");
+                }
+                break;
+            }
+            case 12:
+            {
+                size_t row_p, column_p;
+                printf("Choose line, index to paste: ");
+
+                if (scanf_s("%zu %zu", &row_p, &column_p) == 2) {
+                    save_to_history(text, current_row + 1, capacity);
+                    paste_text(text, current_row + 1, row_p, column_p);
+                }
+                else {
+                    printf("Invalid input\n");
+                }
+                break;
+            }
+            case 13:
+            {
+                size_t row_d, column_d, count_d;
+                printf("Choose line, index to replace: ");
+
+                if (scanf_s("%zu %zu %zu", &row_d, &column_d, &count_d) == 3) {
+                    save_to_history(text, current_row + 1, capacity);
+                    delete_symbols(text, current_row + 1, row_d, column_d, count_d);
+                }
+                else {
+                    printf("Invalid input\n");
+                }
+                break;
+            }
+            case 14: {
+
+                size_t row_r, column_r;
+                char rep_buffer[256];
+                printf("Choose line, index, number of symbols: ");
+                scanf_s("%zu %zu", &row_r, &column_r);
+                printf("Enter your text to replace with: ");
+                getchar();
+                if (fgets(rep_buffer, sizeof(rep_buffer), stdin) != NULL)
+                {
+                    size_t len = strlen(rep_buffer);
+                    if (len > 0 && rep_buffer[len - 1] == '\n') {
+                        rep_buffer[len - 1] = '\0';
+                    }
+                }
+                save_to_history(text, current_row + 1, capacity);
+                insert_with_replacement(text, current_row + 1, row_r, column_r, rep_buffer);
+                break;
+            }
             case 0: printf("Exit");break;
             default: printf("Unknown command.\n");
             }
-            if (choice == 0) { break; }
+            
         }
+        
+        
         //тут звільняю пам'ять
-        if (text != NULL) {
+        if (text != NULL) 
+        {
             for (size_t i = 0; i < capacity; i++)//занулює нові комірки, в яких поки що лежить сміття 
             {
                 free(text[i]);
