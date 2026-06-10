@@ -2,7 +2,7 @@
 #include<inttypes.h>
 #include<stdlib.h>
 #include<string.h>
-#define MAX_HISTORY 3
+#define MAX_HISTORY 10
 
 typedef struct {
     char* text_lines[100];
@@ -297,21 +297,21 @@ void find_str(char** text, size_t row_count, const char* target_str) {
             history_count++;
             history[history_ind].row_count = row_count;
             history[history_ind].capacity = capacity;
-
+            for (size_t i = 0; i < 100; i++) {
+                history[history_ind].text_lines[i] = NULL;
+            }
             
-            for (size_t i = 0; i < capacity; i++)
-            {
-                if (text != NULL && text[i]!=NULL) {
+            for (size_t i = 0; i < row_count; i++) {
+                if (i >= 100) break;
+
+                if (text != NULL && text[i] != NULL) {
                     size_t len = strlen(text[i]);
+                    //free_history_state(0);
                     history[history_ind].text_lines[i] = malloc(len + 1);
                     if (history[history_ind].text_lines[i] != NULL) {
                         strcpy_s(history[history_ind].text_lines[i], len + 1, text[i]);
                     }
-                    else {
-                        history[history_ind].text_lines[i] = NULL;
-                    }
-                }
-            }
+                }}
     }
     void undo(char*** text, size_t* capacity, size_t* current_row) {
         if (history_ind <= 0) {
@@ -323,13 +323,17 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 if ((*text)[i] != NULL) { free((*text)[i]); }
             }
             free(*text);
+            *text = NULL;
         }
         history_ind--;
         HistoryState state = history[history_ind];
         *capacity = state.capacity;
-        *current_row = (state.row_count > 0) ? state.row_count - 1 : 0;
+        if (state.row_count > 0)
+            *current_row = state.row_count - 1;
+        else
+            *current_row = 0;
         *text = calloc(*capacity, sizeof(char*));
-        for (size_t i = 0; i < *capacity; i++)
+        for (size_t i = 0; i < state.row_count && i < 100; i++)
         {
             if (state.text_lines[i] != NULL) {
                 size_t len = strlen(state.text_lines[i]);
@@ -353,13 +357,17 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 if ((*text)[i] != NULL) { free((*text)[i]); }
             }
             free(*text);
+            *text = NULL;
         }
         history_ind++;
         HistoryState state = history[history_ind];
         *capacity = state.capacity;
-        *current_row = (state.row_count > 0) ? state.row_count - 1 : 0;
+        *current_row = state.row_count;if (state.row_count > 0)
+            *current_row = state.row_count - 1;
+        else
+            *current_row = 0;
         *text = calloc(*capacity, sizeof(char*));
-        for (size_t i = 0; i < *capacity; i++)
+        for (size_t i = 0; i < state.row_count && i < 100; i++)
         {
             if (state.text_lines[i] != NULL) {
                 size_t len = strlen(state.text_lines[i]);
@@ -493,13 +501,13 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                         int c;
                         while ((c = getchar()) != '\n' && c != EOF);
                     }
-                    save_to_history(text, current_row + 1, capacity);
                     append_text(&text, &capacity, current_row, buffer);
+                    save_to_history(text, current_row + 1, capacity);break;
                 }
                 break;
             case 2:
-                save_to_history(text, current_row + 1, capacity);
-                add_line(&text, &capacity, &current_row);break;
+                add_line(&text, &capacity, &current_row);
+                save_to_history(text, current_row + 1, capacity);break;
             case 3:
                 printf("Choose action: 1-Save, 2-Load: ");
                 int file_op;
@@ -532,8 +540,9 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                     if (len > 0 && insert_buffer[len - 1] == '\n') {
                         insert_buffer[len - 1] = '\0';
                     }
-                    save_to_history(text, current_row + 1, capacity);
                     insert_text(text, current_row + 1, t_row, t_col, insert_buffer);
+                    save_to_history(text, current_row + 1, capacity);
+                   
                 }
                 break;
             }
@@ -563,8 +572,9 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 printf("Choose line, index, number of symbols: ");
 
                 if (scanf_s("%zu %zu %zu", &row_d, &column_d, &count_d) == 3) {
-                    save_to_history(text, current_row + 1, capacity);
                     delete_symbols(text, current_row + 1, row_d, column_d, count_d);
+                    save_to_history(text, current_row + 1, capacity);
+                    
                 }
                 else {
                     printf("Invalid input\n");
@@ -585,8 +595,9 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 printf("Choose line, index, number of symbols to cut: ");
 
                 if (scanf_s("%zu %zu %zu", &row_c, &column_c, &count_c) == 3) {
-                    save_to_history(text, current_row + 1, capacity);
                     cut_text(text, current_row + 1, row_c, column_c, count_c);
+                    save_to_history(text, current_row + 1, capacity);
+                    
                 }
                 else {
                     printf("Invalid input\n");
@@ -599,8 +610,9 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 printf("Choose line, index to paste: ");
 
                 if (scanf_s("%zu %zu", &row_p, &column_p) == 2) {
-                    save_to_history(text, current_row + 1, capacity);
                     paste_text(text, current_row + 1, row_p, column_p);
+                    save_to_history(text, current_row + 1, capacity);
+                    
                 }
                 else {
                     printf("Invalid input\n");
@@ -635,11 +647,12 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                         rep_buffer[len - 1] = '\0';
                     }
                 }
-                save_to_history(text, current_row + 1, capacity);
                 insert_with_replacement(text, current_row + 1, row_r, column_r, rep_buffer);
+                save_to_history(text, current_row + 1, capacity);
+               
                 break;
             }
-            case 0: printf("Exit\n");break;
+            case 0: printf("Exit\n");return 0;
             default: printf("Unknown command.\n");
             }
             
