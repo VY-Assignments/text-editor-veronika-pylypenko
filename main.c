@@ -162,7 +162,7 @@ void load_file(char*** text, size_t* capacity, size_t* current_row) {
             buffer[b_len - 1] = '\0';
             end_with_newline = 1;
         }
-        if (!is_new_line == 0) {
+        if (is_new_line == 0) {
             append_text(text, capacity, *current_row, buffer);
         }
         else {
@@ -218,9 +218,9 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 found_signal++;
             }
         }
-        if (found_signal == 0) {
-            printf("Search string was not found!");
-        }
+    }
+    if (found_signal == 0) {
+        printf("Search string was not found!");
     }
 }
     //for case 5
@@ -265,13 +265,15 @@ void find_str(char** text, size_t row_count, const char* target_str) {
     }
     void free_history_state(int ind) {
         if (ind >= 0 && ind < MAX_HISTORY) {
-            for (size_t i = 0; i <history[ind].capacity; i++)
+            for (size_t i = 0; i < history[ind].row_count; i++)
             {
                 if (history[ind].text_lines[i] != NULL) {
                    free(history[ind].text_lines[i]);
                    history[ind].text_lines[i] = NULL;
                 }
             }
+            history[ind].row_count = 0;
+            history[ind].capacity = 0;
         }
     }
    
@@ -286,6 +288,8 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 for (int i = 1; i < MAX_HISTORY;i++) {
                     history[i - 1] = history[i];
                }
+                memset(&history[MAX_HISTORY - 1], 0, sizeof(HistoryState));
+
                 history_ind--;
                 history_count--;
             }
@@ -294,6 +298,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
             history[history_ind].row_count = row_count;
             history[history_ind].capacity = capacity;
 
+            
             for (size_t i = 0; i < capacity; i++)
             {
                 if (text != NULL && text[i]!=NULL) {
@@ -323,7 +328,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         HistoryState state = history[history_ind];
         *capacity = state.capacity;
         *current_row = (state.row_count > 0) ? state.row_count - 1 : 0;
-        *text = malloc((*capacity) * sizeof(char*));
+        *text = calloc(*capacity, sizeof(char*));
         for (size_t i = 0; i < *capacity; i++)
         {
             if (state.text_lines[i] != NULL) {
@@ -353,7 +358,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
         HistoryState state = history[history_ind];
         *capacity = state.capacity;
         *current_row = (state.row_count > 0) ? state.row_count - 1 : 0;
-        *text = malloc((*capacity) * sizeof(char*));
+        *text = calloc(*capacity, sizeof(char*));
         for (size_t i = 0; i < *capacity; i++)
         {
             if (state.text_lines[i] != NULL) {
@@ -406,7 +411,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
             printf("Text cut succesfully!\n");
         }
     }
-    void paste_text(char** text, size_t row_count, size_t target_row, size_t target_column, size_t count) {
+    void paste_text(char** text, size_t row_count, size_t target_row, size_t target_column) {
       
         if (global_buffer == NULL || strlen(global_buffer) == 0) {
             printf("Clipboard is empty!\n"); return;
@@ -512,7 +517,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 break;
                 //Use files to load/save the information
             case 4:
-                text_printing(text, current_row + 1);break;
+                text_printing(text, current_row + 1);
                 break;
             case 5: {
                 size_t t_row, t_col;
@@ -605,11 +610,10 @@ void find_str(char** text, size_t row_count, const char* target_str) {
             case 13:
             {
                 size_t row_d, column_d, count_d;
-                printf("Choose line, index to replace: ");
+                printf("Choose line, index and number of symbols to copy: ");
 
                 if (scanf_s("%zu %zu %zu", &row_d, &column_d, &count_d) == 3) {
-                    save_to_history(text, current_row + 1, capacity);
-                    delete_symbols(text, current_row + 1, row_d, column_d, count_d);
+                    copy_text(text, current_row + 1, row_d, column_d, count_d);
                 }
                 else {
                     printf("Invalid input\n");
@@ -635,7 +639,7 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 insert_with_replacement(text, current_row + 1, row_r, column_r, rep_buffer);
                 break;
             }
-            case 0: printf("Exit");break;
+            case 0: printf("Exit\n");break;
             default: printf("Unknown command.\n");
             }
             
@@ -650,6 +654,9 @@ void find_str(char** text, size_t row_count, const char* target_str) {
                 free(text[i]);
             }
             free(text);
+        }
+        if (global_buffer != NULL) {
+            free(global_buffer);
         }
         for (int i = 0; i < history_count; i++)
         {
